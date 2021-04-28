@@ -5,59 +5,67 @@
 % | Author: Dávid Kubek                                                       |
 % +---------------------------------------------------------------------------+
 
+% +---------------------------------------------------------------------------+
+% | Game specific data
+% +---------------------------------------------------------------------------+
+
 % default_cards(?Cards:list) is det.
 default_cards(Cards) :-
     Cards =
-    [
-      bat, sword, dragon, genie, book, owl, moth, keys, scarab, gold, princess,
-      emerald, troll, skull, spider, crown, candelabrum, map, chest, lizard,
-      helmet, ring, rat, ghost
+    [ bat, emerald, helmet, book, candelabrum, chest, crown, dragon, genie,
+      ghost, gold, keys, lizard, map, moth, owl, princess, rat, ring, scarab,
+      skull, spider, troll, sword
     ].
 
+% List of default goald
 default_goals(Goals) :-
     default_cards(Cards),
     append([red_home, yellow_home, blue_home, green_home, none], Cards, Goals).
 
+% List of tiles as packaged in the game box
 default_free_tiles(FreeTiles) :-
-    FreeTiles = [ tile(t, _, genie, _),
-                  tile(t, _, ghost, _),
-                  tile(t, _, dragon, _),
-                  tile(t, _, troll, _),
-                  tile(t, _, princess, _),
-                  tile(t, _, bat, _),
+    FreeTiles = [ tile(t, _, genie,     _),
+                  tile(t, _, ghost,     _),
+                  tile(t, _, dragon,    _),
+                  tile(t, _, troll,     _),
+                  tile(t, _, princess,  _),
+                  tile(t, _, bat,       _),
 
-                  tile(l, _, rat, _),
-                  tile(l, _, none, _),
-                  tile(l, _, scarab, _),
-                  tile(l, _, lizard, _),
-                  tile(l, _, spider, _),
-                  tile(l, _, owl, _),
-                  tile(l, _, moth, _),
-                  tile(l, _, none, _),
-                  tile(l, _, none, _),
-                  tile(l, _, none, _),
-                  tile(l, _, none, _),
-                  tile(l, _, none, _),
-                  tile(l, _, none, _),
-                  tile(l, _, none, _),
-                  tile(l, _, none, _),
-                  tile(l, _, none, _),
-                  tile(i, _, none, _),
+                  tile(l, _, rat,       _),
+                  tile(l, _, scarab,    _),
+                  tile(l, _, lizard,    _),
+                  tile(l, _, spider,    _),
+                  tile(l, _, owl,       _),
+                  tile(l, _, moth,      _),
 
-                  tile(i, _, none, _),
-                  tile(i, _, none, _),
-                  tile(i, _, none, _),
-                  tile(i, _, none, _),
-                  tile(i, _, none, _),
-                  tile(i, _, none, _),
-                  tile(i, _, none, _),
-                  tile(i, _, none, _),
-                  tile(i, _, none, _),
-                  tile(i, _, none, _)
+                  tile(l, _, none,      _),
+                  tile(l, _, none,      _),
+                  tile(l, _, none,      _),
+                  tile(l, _, none,      _),
+                  tile(l, _, none,      _),
+                  tile(l, _, none,      _),
+                  tile(l, _, none,      _),
+                  tile(l, _, none,      _),
+                  tile(l, _, none,      _),
+                  tile(l, _, none,      _),
+                  tile(l, _, none,      _),
+
+                  tile(i, _, none,      _),
+                  tile(i, _, none,      _),
+                  tile(i, _, none,      _),
+                  tile(i, _, none,      _),
+                  tile(i, _, none,      _),
+                  tile(i, _, none,      _),
+                  tile(i, _, none,      _),
+                  tile(i, _, none,      _),
+                  tile(i, _, none,      _),
+                  tile(i, _, none,      _),
+                  tile(i, _, none,      _)
                 ].
 
 
 % has_open_directions(Type, Directions:list)
+% true if one can get to the given directions with the specified file
 has_open_directions(t, wne).
 has_open_directions(t, nes).
 has_open_directions(t, wes).
@@ -83,10 +91,10 @@ default_board_template(Board) :-
     , [ T71, _, T73, _, T75, _, T77]
     ],
 
-    T11 = tile(l,   es,     red_home,      []),
+    T11 = tile(l,   es,     red_home,      [r]),
     T13 = tile(t,   wes,    book,          []),
     T15 = tile(t,   wes,    gold,          []),
-    T17 = tile(l,   ws,     yellow_home,   []),
+    T17 = tile(l,   ws,     yellow_home,   [y]),
 
     T31 = tile(t,   nes,    map,           []),
     T33 = tile(t,   nes,    crown,         []),
@@ -98,73 +106,75 @@ default_board_template(Board) :-
     T55 = tile(t,   wns,    emerald,       []),
     T57 = tile(t,   wns,    sword,         []),
 
-    T71 = tile(l,   ne,     green_home,    []),
+    T71 = tile(l,   ne,     green_home,    [g]),
     T73 = tile(t,   wne,    candelabrum,   []),
     T75 = tile(t,   wne,    helmet,        []),
-    T77 = tile(l,   wn,     blue_home,     []).
+    T77 = tile(l,   wn,     blue_home,     [b]).
 
-tile_type(tile(Type, _, _, _), Type).
-tile_directions(tile(_, Directions, _, _), Directions).
-tile_goal(tile(_, _, Goal, _), Goal).
-tile_players(tile(_, _, _, Players), Players).
+tile_goal(tile(_, _, Goal), Goal).
 
-list_subtract([], _, []).
-list_subtract([H | T], List2, Ans) :-
-    (
-        member(H, List2) -> Ans = Ans_ ; Ans = [H | Ans_]
-    ),
-    list_subtract(T, List2, Ans_).
-
-
+% Find all the goals on the board
 collect_board_goals(Board, Goals) :-
     flatten(Board, Flattened),
     exclude(var, Flattened, NonVar),
     maplist(tile_goal, NonVar, Goals).
 
+% Find all uninified board possitions. Used with board templates
 collect_free_board_template_positions(BoardTemplate, FreePositions) :-
     flatten(BoardTemplate, Flattened),
     include(var, Flattened, FreePositions).
 
-random_board(RandomBoard) :-
+% +---------------------------------------------------------------------------+
+% | Random generation
+% +---------------------------------------------------------------------------+
+
+% Generate a random board
+random_board(RandomBoard, FreeTile) :-
     default_board_template(Board),
     collect_free_board_template_positions(Board, FreePositions),
-    default_random_tiles(FreePositions),
+    random_default_tiles(FreePositions, FreeTile),
     RandomBoard = Board,
     !.
 
-default_random_tiles(FreePositions) :-
+% Generate a random ordering of default tiles and an additional free tile
+random_default_tiles(FreePositions, FreeTile) :-
     default_free_tiles(FreeTiles),
-    default_random_tiles(FreeTiles, FreePositions).
+    random_default_tiles(FreeTiles, FreePositions, FreeTile).
 
-default_random_tiles(_, []).
-default_random_tiles(FreeTiles, [T | Tiles]) :-
+random_default_tiles([FreeTile], [], FreeTile).
+random_default_tiles(FreeTiles, [T | Tiles], FreeTile) :-
     T = tile(Type, Directions, _, []),
     random_select(T, FreeTiles, Rest),
     findall(Ds, has_open_directions(Type, Ds), Dss),
     random_member(RandomDirections, Dss),
     canonical_directions(RandomDirections, Directions),
-    default_random_tiles(Rest, Tiles).
+    random_default_tiles(Rest, Tiles, FreeTile).
 
-
-% tile(Type, OpenDirections:list, Goal, Players:list)
-is_valid_tile(Type, OpenDirections, Goal, _) :-
-    member(Type, [t, l, i]),
-    has_open_directions(Type, OpenDirections),
-    default_goals(Goals),
-    member(Goal, Goals).
-
-is_insert_position(Position, Direction) :-
-    member(Position, [2, 4, 6]),
-    member(Direction, [n, e, s, w]).
-
-
+% Generate a random deck
 random_deck(0, Cards, [], Cards) :- !.
 random_deck(NCards, Cards, [Card | Deck], Rest) :-
     random_select(Card, Cards, WithoutCard),
     NewNCards is NCards - 1,
     random_deck(NewNCards, WithoutCard, Deck, Rest).
 
+% +---------------------------------------------------------------------------+
+% | Validation
+% +---------------------------------------------------------------------------+
 
+% tile(Type, OpenDirections:list, Goal, Players:list)
+is_valid_tile(tile(Type, OpenDirections, Goal, _)) :-
+    member(Type, [t, l, i]),
+    has_open_directions(Type, OpenDirections),
+    default_goals(Goals),
+    member(Goal, Goals).
+
+% Cen we insert in this position?
+is_insert_position(Position, Direction) :-
+    member(Position, [2, 4, 6]),
+    member(Direction, [n, e, s, w]).
+
+
+% Convert directions to a cannonical form
 canonical_directions(Directions, Canonical) :-
     atom_chars(Directions, Split),
     once(canonical_directions_(Split, [w, n, e, s], CanonicalList)),
@@ -178,7 +188,37 @@ canonical_directions_(Directions, [ _ | Order ], Cs) :-
     canonical_directions_(Directions, Order, Cs).
 
 
-%%% GX
+% state(Board, FreeTile, FreeTilePosition, PlayerOrder)
+initialize_game(Board, FreeTile, PlayerOrder, State) :-
+    is_valid_tile(FreeTile),
+    forall(member(Player, PlayerOrder), member(Player, [r, g, b, y])),
+    State = state(Board, FreeTile, none-none, PlayerOrder),
+    !.
+
+% +---------------------------------------------------------------------------+
+% | AI
+% +---------------------------------------------------------------------------+
+
+next_state(OldState, NextState) :-
+    OldState = state(Board, FreeTile, FreeTilePosition, PlayerOrder),
+    PlayerOrder = [Player | Players],
+    FreeTile = tile(Type, Directions, Goal, Players),
+
+    findall(
+            InserPosition,
+            next_valid_position(FreeTilePosition, InserPosition),
+            InserPositions
+    ),
+    find_best_insert_position(InserPositions, BestPosition).
+
+next_valid_position(FTPosition-FTDirection, InserPosition-InsertDirection) :-
+    is_insert_position(InserPosition, InsertDirection),
+    InserPosition-InsertDirection \= FTPos-FTDir.
+
+
+% +---------------------------------------------------------------------------+
+% | "Graphics"
+% +---------------------------------------------------------------------------+
 
 draw_tile(t, wns, [['┌','─','┐',' ',' ','┌','─','┐'],
                      ['└','─','┘',' ',' ','│',' ','│'],
