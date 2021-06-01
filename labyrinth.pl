@@ -79,6 +79,11 @@ has_open_directions(l, wn).
 has_open_directions(i, ns).
 has_open_directions(i, we).
 
+opposite_direction(w, e).
+opposite_direction(n, s).
+opposite_direction(e, w).
+opposite_direction(s, n).
+
 % board
 default_board_template(Board) :-
     Board =
@@ -173,7 +178,6 @@ is_insert_position(Position, Direction) :-
     member(Position, [2, 4, 6]),
     member(Direction, [n, e, s, w]).
 
-
 % Convert directions to a cannonical form
 canonical_directions(Directions, Canonical) :-
     atom_chars(Directions, Split),
@@ -196,9 +200,23 @@ initialize_game(Board, FreeTile, PlayerOrder, State) :-
     !.
 
 % +---------------------------------------------------------------------------+
+% | Matrix and List Operations
+% +---------------------------------------------------------------------------+
+
+compose([H | T], H, T).
+insert(X, Xs, [X | Xs]).
+lift(X, [X]).
+
+transpose([[]|_],[]) :- !.
+transpose(Xss,[Hs|Zss]) :-
+    maplist(compose,Xss, Hs,Ts),
+    transpose(Ts,Zss).
+
+% +---------------------------------------------------------------------------+
 % | AI
 % +---------------------------------------------------------------------------+
 
+/*
 next_state(OldState, NextState) :-
     OldState = state(Board, FreeTile, FreeTilePosition, PlayerOrder),
     PlayerOrder = [Player | Players],
@@ -209,11 +227,31 @@ next_state(OldState, NextState) :-
             next_valid_position(FreeTilePosition, InserPosition),
             InserPositions
     ),
-    find_best_insert_position(InserPositions, BestPosition).
+    find_best_new_state(OldState, InserPositions, none-none, NewState).
+
+find_best_new_state(_, [], _-NewState, NewState).
+find_best_new_state(OldState, [IP | IPs], AScore-AState, NewState) :-
+    OldState = state(Board, FreeTile, FreeTilePosition, [Player | _]),
+
+    insert_tile(OldState, IP, State),
+    score_state(State, Player, Score),
+    (
+        Score > AScore
+    ->
+        find_best_new_state(OldState, IPs, Score-State, NewState)
+    ;
+        find_best_new_state(OldState, IPs, AScore-AState, NewState)
+    )
+    .
+
+insert_tile(OldState, InserPosition-InsertDirection, NewState) :-
+    OldState = state(Board, FreeTile, _, _),
+
 
 next_valid_position(FTPosition-FTDirection, InserPosition-InsertDirection) :-
     is_insert_position(InserPosition, InsertDirection),
-    InserPosition-InsertDirection \= FTPos-FTDir.
+    InserPosition-InsertDirection \= FTPosition-FTDirection.
+*/
 
 
 % +---------------------------------------------------------------------------+
@@ -373,10 +411,6 @@ pad_tile_base(Direction, Number, Tile) :-
         )
     ).
 
-compose([H | T], H, T).
-insert(X, Xs, [X | Xs]).
-lift(X, [X]).
-
 draw_board(Board) :-
     maplist(maplist(draw_tile), Board, Sprites),
     pad_board(Sprites, Padded),
@@ -421,7 +455,6 @@ draw_line(Row) :-
     atomics_to_string(Strings, ' ', TextRow),
     writeln(TextRow).
 
-% UGLY CONSTANTS
 center_goal(Length, Goal, Out) :-
     atom_chars(Goal, Chars),
     center(Chars, Length, ' ', Centered),
